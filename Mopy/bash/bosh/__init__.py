@@ -75,6 +75,8 @@ undefinedPath = GPath(u'C:\\not\\a\\valid\\path.exe')
 empty_path = GPath(u'')
 undefinedPaths = {GPath(u'C:\\Path\\exe.exe'), undefinedPath}
 
+_max_espms = 255
+
 # Singletons, Constants -------------------------------------------------------
 #--Constants
 #..Bit-and this with the fid to get the objectindex.
@@ -2320,8 +2322,10 @@ class ModInfos(FileInfos):
         """Mutate _active_wip cache then save if needed."""
         if _activated is None: _activated = set()
         try:
-            if len(self._active_wip) == 255:
-                raise PluginsFullError(u'%s: Trying to activate more than 255 mods' % fileName)
+            acti_filtered_espm = [x for x in self._active_wip if
+                                  x.cext != u'.esl']
+            if len(acti_filtered_espm) == _max_espms:
+                raise PluginsFullError(u'%s: Trying to activate more than 255 espms' % fileName)
             _children = (_children or tuple()) + (fileName,)
             if fileName in _children[:-1]:
                 raise BoltError(u'Circular Masters: ' +u' >> '.join(x.s for x in _children))
@@ -2413,10 +2417,12 @@ class ModInfos(FileInfos):
         missingSet = modsSet - allMods
         toSelect = modsSet - missingSet
         listToSelect = load_order.get_ordered(toSelect)
-        extra = listToSelect[255:]
+        acti_filtered_espm = [x for x in listToSelect if x.cext != u'.esl']
+        extra = acti_filtered_espm[_max_espms:]
         #--Save
-        final_selection = listToSelect[:255]
-        self.cached_lo_save_active(active=final_selection)
+        if extra:
+            listToSelect = [x for x in listToSelect if x not in set(extra)]
+        self.cached_lo_save_active(active=listToSelect)
         #--Done/Error Message
         message = u''
         if missingSet:
