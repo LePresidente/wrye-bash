@@ -197,7 +197,7 @@ class Installer(object):
         #--Volatile: set by refreshDataSizeCrc
         self.hasWizard = False
         self.hasBCF = False
-        self.espmMap = collections.defaultdict(list)
+        self.espmMap = bolt.DefaultLowerDict(list)
         self.hasReadme = False
         self.hasBethFiles = False
         self.ci_dest_sizeCrc = bolt.LowerDict()
@@ -622,7 +622,7 @@ class Installer(object):
         skipDirFilesDiscard = skipDirFiles.discard
         skipExtFilesAdd = self.skipExtFiles.add
         commonlyEditedExts = Installer.commonlyEditedExts
-        espmMap = self.espmMap = collections.defaultdict(list)
+        espmMap = self.espmMap = bolt.DefaultLowerDict(list)
         reModExtMatch = bass.reModExt.match
         reReadMeMatch = Installer.reReadMe.match
         #--Scan over fileSizeCrcs
