@@ -1197,14 +1197,14 @@ class BSAInfo(FileInfo, _bsa_type):
     def is_bsa_active(self):
         """Return True if corresponding mod is active."""
         is_act = load_order.cached_is_active
-        return is_act(self.name.root + '.esm') or is_act(self.name.root + '.esp')
+        return is_act(self.name.root + '.esm') or is_act(self.name.root + '.esp') # ....
 
     def active_bsa_index(self):
         """Return the index of the active bsa (the corresponding mod's
         index) or raise ValueError if the bsa is not active."""
         active_index = load_order.cached_active_tuple().index
         try:
-            return active_index(self.name.root + '.esm')
+            return active_index(self.name.root + '.esm') # ...
         except ValueError:
             return active_index(self.name.root + '.esp')
 
