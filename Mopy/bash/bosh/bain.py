@@ -623,7 +623,8 @@ class Installer(object):
         skipExtFilesAdd = self.skipExtFiles.add
         commonlyEditedExts = Installer.commonlyEditedExts
         espmMap = self.espmMap = bolt.DefaultLowerDict(list)
-        reModExtMatch = bass.reModExt.match
+        from . import modInfos
+        reModExtMatch = modInfos.file_pattern.match
         reReadMeMatch = Installer.reReadMe.match
         #--Scan over fileSizeCrcs
         root_path = self.extras_dict.get('root_path', u'')
@@ -897,6 +898,7 @@ class Installer(object):
         missing.clear()
         mismatched.clear()
         misEspmed.clear()
+        from . import modInfos
         if self.type == 0:
             status = -20
         elif data_sizeCrc:
@@ -906,7 +908,7 @@ class Installer(object):
                     missing.add(filename)
                 elif sizeCrc != sizeCrcDate[:2]:
                     mismatched.add(filename)
-                    if not os.path.split(filename)[0] and bass.reModExt.search(filename):
+                    if modInfos.rightFileType(filename):
                         misEspmed.add(filename)
                 if sizeCrc == ci_underrides_sizeCrc.get(filename):
                     underrides.add(filename)
@@ -2300,7 +2302,8 @@ class InstallersData(DataStore):
         emptyDirs = set()
         emptyDirsAdd = emptyDirs.add
         nonPlugins = set()
-        reModExtSearch = bass.reModExt.search
+        from . import modInfos
+        reModExtSearch = modInfos.rightFileType
         removedPlugins = set()
         removedInis = set()
         #--Construct list of files to delete
@@ -2325,7 +2328,6 @@ class InstallersData(DataStore):
                 env.shellDelete(nonPlugins, parent=parent)
             #--Delete mods and remove them from load order
             if removedPlugins:
-                from . import modInfos
                 refresh_ui[0] = True
                 modInfos.delete(removedPlugins, recycle=False,
                                 raise_on_master_deletion=False)
@@ -2494,6 +2496,7 @@ class InstallersData(DataStore):
                         refresh_ui): # we do _not_ remove Ini Tweaks/*
         emptyDirs, mods = set(), set()
         norm_ghost = Installer.getGhosted()
+        from . import modInfos
         for filename in removes:
             # don't remove files in Wrye Bash-related directories
             if filename.lower().startswith(skipPrefixes): continue
@@ -2501,7 +2504,7 @@ class InstallersData(DataStore):
                 norm_ghost.get(filename, filename))
             try:
                 full_path.moveTo(destDir.join(filename)) # will drop .ghost
-                if bass.reModExt.search(full_path.s):
+                if modInfos.rightFileType(full_path):
                     mods.add(GPath(filename))
                     refresh_ui[0] = True
                 self.data_sizeCrcDate.pop(filename, None)
