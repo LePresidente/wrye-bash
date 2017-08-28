@@ -86,10 +86,14 @@ class ModRuleSet:
         ruleBlockIds = (u'NOTES',u'CONFIG',u'SUGGEST',u'WARN')
         reComment = re.compile(ur'##.*',re.U)
         reBlock   = re.compile(ur'^>>\s+([A-Z]+)\s*(.*)',re.U)
-        reMod     = re.compile(ur'\s*([\-|]?)(.+?\.es[pm])(\s*\[[^\]]\])?',re.I|re.U)
+        reMod     = re.compile(ur'\s*([\-|]?)(.+?\.(' + u'|'.join(
+            x[1:] for x in bush.game.espm_extensions) + ur'))(\s*\[[^\]]\])?',
+                               re.I | re.U)
         reRule    = re.compile(ur'^(x|o|\+|-|-\+)\s+([^/]+)\s*(\[[^\]]+\])?\s*//(.*)',re.U)
         reExists  = re.compile(ur'^(e)\s+([^/]+)//(.*)',re.U)
-        reModVersion = re.compile(ur'(.+\.es[pm])\s*(\[[^\]]+\])?',re.I|re.U)
+        reModVersion = re.compile(ur'(.+\.(' + u'|'.join(
+            x[1:] for x in bush.game.espm_extensions) + ur'))\s*(\[[^\]]+\])?',
+                                  re.I|re.U)
 
         def __init__(self,ruleSet):
             self.ruleSet = ruleSet
