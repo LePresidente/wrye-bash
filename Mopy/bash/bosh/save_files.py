@@ -230,24 +230,25 @@ class SkyrimSaveHeader(SaveFileHeader):
             super(SkyrimSaveHeader, self).load_image_data(ins)
 
     def load_masters(self, ins):
+        sse_offset = 0
         if self.__is_sse():
-            self._load_masters_16(self._decompress_masters_sse(ins))
-        else:
-            self._formVersion = unpack_byte(ins)
-            #--Masters
-            self._load_masters_16(ins)
+            sse_offset = ins.tell() + 8 # decompressed/compressed size
+            ins = self._decompress_masters_sse(ins)
+        self._formVersion = unpack_byte(ins)
+        self._mastersStart = ins.tell() + sse_offset
+        #--Masters
+        self._load_masters_16(ins, sse_offset)
 
-    def _load_masters_16(self, ins): # common for skyrim and fallout4
-        self._mastersStart = ins.tell()
+    def _load_masters_16(self, ins, sse_offset=0): # common for skyrim and fallout4
         mastersSize = unpack_int(ins)
         self.masters = []
         numMasters = unpack_byte(ins)
         for count in xrange(numMasters):
             self.masters.append(unpack_str16(ins))
-        self._esl_masters(ins, mastersSize)
+        self._esl_masters(ins, mastersSize, sse_offset)
 
-    def _esl_masters(self, ins, mastersSize):
-        if ins.tell() != self._mastersStart + mastersSize + 4:
+    def _esl_masters(self, ins, mastersSize, sse_offset):
+        if ins.tell() + sse_offset != self._mastersStart + mastersSize + 4:
             raise SaveHeaderError(
                 u'Save game masters size (%i) not as expected (%i).' % (
                     ins.tell() - self._mastersStart - 4, mastersSize))
@@ -274,7 +275,6 @@ class SkyrimSaveHeader(SaveFileHeader):
                     return result
         # Skip decompressed/compressed size, we only want the masters table
         ins.seek(8, 1)
-        self._mastersStart = ins.tell()
         uncompressed = ''
         masters_size = None  # type: int
         while True:  # parse and decompress each block here
@@ -309,9 +309,8 @@ class SkyrimSaveHeader(SaveFileHeader):
             if masters_size is not None:
                 if len(uncompressed) >= masters_size + 5:
                     break
-        # Wrap the decompressed data in a file-like object and return it,
-        # skipping the first byte since the master size starts at the second
-        return StringIO.StringIO(uncompressed[1:])
+        # Wrap the decompressed data in a file-like object and return it
+        return StringIO.StringIO(uncompressed)
 
     def calc_time(self):
         # gameDate format: hours.minutes.seconds
@@ -339,6 +338,7 @@ class Fallout4SaveHeader(SkyrimSaveHeader): # pretty similar to skyrim
     def load_masters(self, ins):
         self._formVersion = unpack_byte(ins)
         unpack_str16(ins) # drop "gameVersion"
+        self._mastersStart = ins.tell()
         #--Masters
         self._load_masters_16(ins)
 
@@ -346,12 +346,12 @@ class Fallout4SaveHeader(SkyrimSaveHeader): # pretty similar to skyrim
         return (3 if self._esl_block() else 1) + sum(
             len(x) + 2 for x in self.masters)
 
-    def _esl_masters(self, ins, mastersSize):
+    def _esl_masters(self, ins, mastersSize, sse_offset):
         if self._esl_block(): # new FO4 save format
             _num_esl_masters = unpack_short(ins)
             for count in xrange(_num_esl_masters):
                 self.masters.append(unpack_str16(ins))
-        super(Fallout4SaveHeader, self)._esl_masters(ins, mastersSize)
+        super(Fallout4SaveHeader, self)._esl_masters(ins, mastersSize, sse_offset)
 
     def _dump_masters(self, ins, numMasters, out, pack):
         oldMasters = []
