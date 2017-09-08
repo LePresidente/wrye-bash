@@ -35,7 +35,7 @@ from .. import bass, bosh, bolt, balt, bush, parsers, load_order
 from ..balt import EnabledLink, AppendableLink, Link, CheckLink, ChoiceLink, \
     ItemLink, SeparatorLink, OneItemLink, Image, UIList_Rename
 from ..bolt import GPath, SubProgress, formatInteger
-from ..bosh import faces, _saves
+from ..bosh import faces
 from ..exception import ArgumentError, BoltError, CancelError, ModError
 
 __all__ = ['Saves_Profiles', 'Save_Rename', 'Save_Renumber', 'Save_Move',
@@ -764,7 +764,9 @@ class Save_StatObse(AppendableLink, OneItemLink):
             saveFile.load(SubProgress(progress,0,0.9))
             log = bolt.LogFile(StringIO.StringIO())
             progress(0.9,_(u"Calculating statistics."))
-            saveFile.logStatObse(log)
+            cosave = self._selected_info.get_cosave()
+            if cosave is not None:
+                cosave.logStatObse(log, saveFile.masters)
         text = log.out.getvalue()
         log.out.close()
         self._showLog(text, title=self._selected_item.s, fixedFont=False)
