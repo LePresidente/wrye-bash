@@ -279,8 +279,21 @@ def dump_environment(_wx, bolt):
     print u"filesystem encoding: %s" % fse, (
         (u' - using %s' % bolt.Path.sys_fs_enc) if not fse else u'')
 
+
 # Main ------------------------------------------------------------------------
 def main(opts):
+    try:
+        _main(opts)
+    except Exception as e:
+        msg = 'Wrye Bash encountered an error. '\
+              'Please post the following information to the official thread at '\
+              'https://afkmods.iguanadons.net/index.php?/topic/4966-wrye-bash-all-games/& or '\
+              'https://bethesda.net/community/topic/38798/relz-wrye-bash-oblivion-skyrim-skyrim-se-fallout-4/\n'\
+              + traceback.format_exc(e)
+        _showErrorInAnyGui(msg)
+
+
+def _main(opts):
     # First of all set the language, set on importing bolt
     bass.language = opts.language
     import bolt # bass.language must be set
@@ -428,6 +441,8 @@ def main(opts):
 
     app.Init() # Link.Frame is set here !
     app.MainLoop()
+
+
 
 # Show error in gui -----------------------------------------------------------
 def _showErrorInGui(e, msg=None, _wx=None, bolt=None):
