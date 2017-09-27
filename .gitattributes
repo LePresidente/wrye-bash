@@ -1,7 +1,7 @@
 * text=auto
 
 *.py text diff=python
-*.html text
+*.html eol=crlf
 .project text
 
 # M$ files
