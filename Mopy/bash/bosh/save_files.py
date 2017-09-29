@@ -37,19 +37,9 @@ import sys
 from collections import OrderedDict
 from functools import partial
 from .. import bolt
-from ..bolt import decode, cstrip
+from ..bolt import decode, cstrip, unpack_, unpack_int, unpack_str8, \
+    unpack_short, unpack_float, unpack_str16, unpack_byte
 from ..exception import SaveHeaderError
-
-# Structure wrappers ----------------------------------------------------------
-def unpack_str8(ins): return ins.read(struct.unpack('B', ins.read(1))[0])
-def unpack_str16(ins): return ins.read(struct.unpack('H', ins.read(2))[0])
-def unpack_int(ins): return struct.unpack('I', ins.read(4))[0]
-def unpack_short(ins): return struct.unpack('H', ins.read(2))[0]
-def unpack_float(ins): return struct.unpack('f', ins.read(4))[0]
-def unpack_byte(ins): return struct.unpack('B', ins.read(1))[0]
-
-def unpack_(ins, fmt):
-    return struct.unpack(fmt, ins.read(struct.calcsize(fmt)))[0]
 
 class SaveFileHeader(object):
     save_magic = 'OVERRIDE'
