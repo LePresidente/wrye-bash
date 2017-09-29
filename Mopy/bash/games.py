@@ -409,12 +409,13 @@ class Game(object):
         lord[:] = [x for x in lord if x not in fix_lo.lo_removed]
         # See if any esm files are loaded below an esp and reorder as necessary
         ol = lord[:]
-        lord.sort(key=lambda m: not self.mod_infos[m].isEsm())
+        is_esml = lambda m: self.mod_infos[m].isEsm() or m.cext == u'.esl'
+        lord.sort(key=lambda m: not is_esml(m))
         fix_lo.lo_reordered |= ol != lord
         # Append new plugins to load order
         index_first_esp = self._index_of_first_esp(lord)
         for mod in fix_lo.lo_added:
-            if self.mod_infos[mod].isEsm():
+            if is_esml(mod):
                 if not mod == master_name:
                     lord.insert(index_first_esp, mod)
                 else:
