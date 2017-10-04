@@ -217,6 +217,8 @@ class SkyrimSaveHeader(SaveFileHeader):
 
     def __is_sse(self): return self.version == 12 # confirm
 
+    def _esl_block(self): return self.__is_sse() and self._formVersion >= 78
+
     def load_image_data(self, ins):
         if self.__is_sse():
             self._compressType = unpack_short(ins)
@@ -245,9 +247,12 @@ class SkyrimSaveHeader(SaveFileHeader):
         numMasters = unpack_byte(ins)
         for count in xrange(numMasters):
             self.masters.append(unpack_str16(ins))
-        self._esl_masters(ins, mastersSize, sse_offset)
-
-    def _esl_masters(self, ins, mastersSize, sse_offset):
+        # SSE / FO4 save format with esl block
+        if self._esl_block():
+            _num_esl_masters = unpack_short(ins)
+            for count in xrange(_num_esl_masters):
+                self.masters.append(unpack_str16(ins))
+        # Check for master's table size
         if ins.tell() + sse_offset != self._mastersStart + mastersSize + 4:
             raise SaveHeaderError(
                 u'Save game masters size (%i) not as expected (%i).' % (
@@ -345,13 +350,6 @@ class Fallout4SaveHeader(SkyrimSaveHeader): # pretty similar to skyrim
     def _master_block_size(self):
         return (3 if self._esl_block() else 1) + sum(
             len(x) + 2 for x in self.masters)
-
-    def _esl_masters(self, ins, mastersSize, sse_offset):
-        if self._esl_block(): # new FO4 save format
-            _num_esl_masters = unpack_short(ins)
-            for count in xrange(_num_esl_masters):
-                self.masters.append(unpack_str16(ins))
-        super(Fallout4SaveHeader, self)._esl_masters(ins, mastersSize, sse_offset)
 
     def _dump_masters(self, ins, numMasters, out, pack):
         oldMasters = []
