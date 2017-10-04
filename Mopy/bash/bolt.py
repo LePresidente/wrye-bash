@@ -1633,9 +1633,10 @@ def unpack_float(ins): return struct.unpack('f', ins.read(4))[0]
 def unpack_byte(ins): return struct.unpack('B', ins.read(1))[0]
 def unpack_int_signed(ins): return struct.unpack('i', ins.read(4))[0]
 def unpack_int64_signed(ins): return struct.unpack('q', ins.read(8))[0]
+def unpack_4s(ins): return struct.unpack('4s', ins.read(4))[0]
 
-def unpack_(ins, fmt):
-    return struct.unpack(fmt, ins.read(struct.calcsize(fmt)))[0]
+def unpack_string(ins, string_len):
+    return struct.unpack('%ds' % string_len, ins.read(string_len))[0]
 
 def unpack_many(ins, fmt):
     return struct.unpack(fmt, ins.read(struct.calcsize(fmt)))

@@ -37,7 +37,7 @@ import sys
 from collections import OrderedDict
 from functools import partial
 from .. import bolt
-from ..bolt import decode, cstrip, unpack_, unpack_int, unpack_str8, \
+from ..bolt import decode, cstrip, unpack_string, unpack_int, unpack_str8, \
     unpack_short, unpack_float, unpack_str16, unpack_byte
 from ..exception import SaveHeaderError
 
@@ -62,7 +62,7 @@ class SaveFileHeader(object):
             raise SaveHeaderError, e.message, sys.exc_info()[2]
 
     def load_header(self, ins):
-        save_magic = unpack_(ins, '%ds' % len(self.__class__.save_magic))
+        save_magic = unpack_string(ins, len(self.__class__.save_magic))
         if save_magic != self.__class__.save_magic:
             raise SaveHeaderError(u'Magic wrong: %r (expected %r)' % (
                 save_magic, self.__class__.save_magic))
@@ -155,7 +155,7 @@ class OblivionSaveHeader(SaveFileHeader):
         ('pcLocation',  (00, unpack_str8)),
         ('gameDays',    (00, unpack_float)),
         ('gameTicks',   (00, unpack_int)),
-        ('gameTime',    (00, lambda ins: unpack_(ins, '16s'))),
+        ('gameTime',    (00, lambda ins: unpack_string(ins, 16))),
         ('ssSize',      (00, unpack_int)),
         ('ssWidth',     (00, unpack_int)),
         ('ssHeight',    (00, unpack_int)),
@@ -200,7 +200,7 @@ class SkyrimSaveHeader(SaveFileHeader):
         ('pcSex',       (00, unpack_short)),
         ('pcExp',       (00, unpack_float)),
         ('pcLvlExp',    (00, unpack_float)),
-        ('filetime',    (00, lambda ins: unpack_(ins, '8s'))),
+        ('filetime',    (00, lambda ins: unpack_string(ins, 8))),
         ('ssWidth',     (00, unpack_int)),
         ('ssHeight',    (00, unpack_int)),
     ])

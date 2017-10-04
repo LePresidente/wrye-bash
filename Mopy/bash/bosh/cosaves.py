@@ -28,27 +28,16 @@ renaming of the masters of the xSE plugin chunk itself and of the Pluggy chunk.
 """
 import struct
 
-from ..bolt import sio, GPath, decode, encode
+from ..bolt import sio, GPath, decode, encode, unpack_string, unpack_int, \
+    unpack_short, unpack_4s, unpack_byte, unpack_str16
 from ..exception import FileError
-
-### MOVE TO BOLT
-def unpack_str8(ins): return ins.read(struct.unpack('B', ins.read(1))[0])
-def unpack_str16(ins): return ins.read(struct.unpack('H', ins.read(2))[0])
-def unpack_4s(ins): return struct.unpack('4s', ins.read(4))[0]
-def unpack_int(ins): return struct.unpack('I', ins.read(4))[0]
-def unpack_short(ins): return struct.unpack('H', ins.read(2))[0]
-def unpack_float(ins): return struct.unpack('f', ins.read(4))[0]
-def unpack_byte(ins): return struct.unpack('B', ins.read(1))[0]
-
-def unpack_(ins, fmt):
-    return struct.unpack(fmt, ins.read(struct.calcsize(fmt)))[0]
 
 class CoSaveHeader(object):
     __slots__ = ('signature', 'formatVersion', 'obseVersion',
                  'obseMinorVersion', 'oblivionVersion', 'numPlugins')
     # numPlugins: the xSE plugins the cosave knows about - including xSE itself
     def __init__(self, ins, cosave_path, signature):
-        self.signature = unpack_(ins, '%ds' % len(signature))
+        self.signature = unpack_string(ins, len(signature))
         if self.signature != signature:
             raise FileError(cosave_path, u'Signature wrong: %r (expected %r)' %
                 (self.signature, signature))
