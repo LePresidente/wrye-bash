@@ -2450,7 +2450,7 @@ class ModInfos(FileInfos):
         iniFiles.append(oblivionIni)
         return iniFiles
 
-    def calculateLO(self, mods=None): # excludes corrupt mods
+    def calculateLO(self, mods=None): # excludes corrupt mods ### MOVE TO GAMES
         if mods is None: mods = self.keys()
         mods = sorted(mods) # sort case insensitive (for time conflicts)
         mods.sort(key=lambda x: self[x].mtime)
