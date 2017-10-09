@@ -3716,8 +3716,7 @@ class BashFrame(BaltFrame):
             title = bush.game.altName + u' %s%s'
         else:
             title = u'Wrye Bash %s%s '+_(u'for')+u' '+bush.game.displayName
-        title %= (settings['bash.version'],
-                  (u' ' + _(u'(Standalone)')) if settings[
+        title %= (bass.AppVersion, (u' ' + _(u'(Standalone)')) if settings[
                       'bash.standalone'] else u'')
         if CBashApi.Enabled:
             title += u', CBash %s: ' % (CBashApi.VersionText,)
