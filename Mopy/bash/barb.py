@@ -47,7 +47,7 @@ import bush
 from . import images_list
 from bolt import GPath, deprint
 from balt import askSave, askOpen, askWarning, showError, showWarning, \
-    showInfo, Link, BusyCursor
+    showInfo, Link, BusyCursor, askYes
 from exception import AbstractError
 
 opts = None # command line arguments used when launching Bash, set on bash
@@ -116,8 +116,18 @@ class BaseBackupSettings(object):
     def _get_backup_filename(parent, path, do_quit):
         raise AbstractError
 
-def SameAppVersion():
-    return not cmp(bass.AppVersion, bass.settings['bash.version'])
+def new_bash_version_prompt_backup():
+    # return False if old version == 0 (as in not previously installed)
+    if bass.settings['bash.version'] == 0: return False
+    # return True if not same app version and user opts to backup settings
+    return not SameAppVersion() and askYes(Link.Frame, u'\n'.join([
+        _(u'A different version of Wrye Bash was previously installed.'),
+        _(u'Previous Version: ') + (u'%s' % bass.settings['bash.version']),
+        _(u'Current Version: ') + (u'%s' % bass.AppVersion),
+        _(u'Do you want to create a backup of your Bash settings before '
+          u'they are overwritten?')]))
+
+def SameAppVersion(): return bass.AppVersion == bass.settings['bash.version']
 
 #------------------------------------------------------------------------------
 class BackupSettings(BaseBackupSettings):
