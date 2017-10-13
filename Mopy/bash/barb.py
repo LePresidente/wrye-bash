@@ -48,7 +48,7 @@ from . import images_list
 from bolt import GPath, deprint
 from balt import askSave, askOpen, askWarning, showError, showWarning, \
     showInfo, Link, BusyCursor
-from exception import AbstractError, BackupCancelled
+from exception import AbstractError
 
 opts = None # command line arguments used when launching Bash, set on bash
 
@@ -91,27 +91,29 @@ def init_settings_files():
     return settings_info
 
 #------------------------------------------------------------------------------
-class BaseBackupSettings:
+class BaseBackupSettings(object):
 
     def __init__(self, parent=None, path=None, do_quit=False):
-        path = GPath(path)
-        if path is not None and path.ext == u'' and not path.exists():
-            path = None
-        if path is None: path = bass.settings['bash.backupPath']
-        if path is None: path = bass.dirs['modsBash']
         self.quit = do_quit
-        self._dir = path
-        self.archive = None
-        if path.ext:
-            self._dir = path.head
-            self.archive = path.tail
+        self._dir = path.head
+        self.archive = path.tail
         self.parent = parent
         self.files = {}
 
     def Apply(self):
         raise AbstractError
 
-    def PromptFile(self):
+    @classmethod
+    def get_backup_instance(cls, parent, path, do_quit=False,
+                            handle_images=None):
+        path = GPath(path)
+        path = cls._get_backup_filename(parent, path, do_quit)
+        if not path: return None
+        with BusyCursor():
+            return cls(parent, path, do_quit, handle_images)
+
+    @staticmethod
+    def _get_backup_filename(parent, path, do_quit):
         raise AbstractError
 
 def SameAppVersion():
@@ -120,8 +122,8 @@ def SameAppVersion():
 #------------------------------------------------------------------------------
 class BackupSettings(BaseBackupSettings):
 
-    def __init__(self, parent=None, path=None, do_quit=False, backup_images=None):
-        BaseBackupSettings.__init__(self, parent, path, do_quit)
+    def __init__(self, parent=None, path=None, do_quit=False, handle_images=None):
+        super(BackupSettings, self).__init__(parent, path, do_quit)
         game, dirs = bush.game.fsName, bass.dirs
         for (bash_dir, tmpdir), settings in init_settings_files().iteritems():
             if not settings: # we have to backup everything in there
@@ -137,8 +139,8 @@ class BackupSettings(BaseBackupSettings):
             for ver_list in images_list.values():
                 if  ver_list.get(rel_path.s, -1) == ab_path.size: return False
             return True
-        if backup_images: # 1 is changed images only, 2 is all images
-            onlyChanged = backup_images == 1
+        if handle_images: # 1 is changed images only, 2 is all images
+            onlyChanged = handle_images == 1
             tmpdir = GPath(jo(game, u'Mopy', u'bash', u'images'))
             image_dir = dirs['images']
             for name in image_dir.list():
@@ -164,7 +166,6 @@ class BackupSettings(BaseBackupSettings):
             if fpath.backup.exists(): self.files[tpath.backup] = fpath.backup
 
     def Apply(self):
-        if not self.PromptFile(): return
         deprint(u'')
         deprint(_(u'BACKUP BASH SETTINGS: ') + self._dir.join(self.archive).s)
         temp_settings_backup_dir = bolt.Path.tempDir()
@@ -199,22 +200,19 @@ class BackupSettings(BaseBackupSettings):
             _(u'Backup Path: ') + self._dir.join(self.archive).s]),
             _(u'Backup File Created'))
 
-    def PromptFile(self):
-        """Prompt for backup filename - return False if user cancels."""
-        if self.archive is None or self._dir.join(self.archive).exists():
+    @staticmethod
+    def _get_backup_filename(parent, filename, do_quit):
+        if filename is None or filename.isfile(): # don't overwrite existing
             filename = u'Backup Bash Settings %s (%s) v%s-%s.7z' % (
                 bush.game.fsName, bolt.timestamp(), bass.settings['bash.version'],
                 bass.AppVersion)
-            if not self.quit:
-                path = askSave(self.parent, title=_(u'Backup Bash Settings'),
-                               defaultDir=self._dir, defaultFile=filename,
-                               wildcard=u'*.7z')
-                if not path: return False
-                self._dir = path.head
-                self.archive = path.tail
-            elif not self.archive:
-                self.archive = filename
-        return True
+            if not do_quit: # we are called from UI ask user for backup name
+                base_dir = bass.settings['bash.backupPath'] or bass.dirs[
+                    'modsBash']
+                filename = askSave(parent, title=_(u'Backup Bash Settings'),
+                                   defaultDir=base_dir, defaultFile=filename,
+                                   wildcard=u'*.7z')
+        return filename
 
     def WarnFailed(self):
         showWarning(self.parent, u'\n'.join([
@@ -224,11 +222,9 @@ class BackupSettings(BaseBackupSettings):
 
 #------------------------------------------------------------------------------
 class RestoreSettings(BaseBackupSettings):
-    def __init__(self, parent=None, path=None, do_quit=False, restore_images=None):
-        BaseBackupSettings.__init__(self, parent, path, do_quit)
-        if not self.PromptFile():
-            raise BackupCancelled()
-        self.restore_images = restore_images
+    def __init__(self, parent=None, path=None, do_quit=False, handle_images=None):
+        super(RestoreSettings, self).__init__(parent, path, do_quit)
+        self.restore_images = handle_images
 
     def Apply(self):
         temp_settings_restore_dir = bolt.Path.tempDir()
@@ -260,7 +256,7 @@ class RestoreSettings(BaseBackupSettings):
               u'\n' +
               _(u'Do you want to restore this backup anyway?'),
               _(u'Warning: Version Mismatch!'))):
-            raise BackupCancelled()
+            return
 
         deprint(u'')
         deprint(_(u'RESTORE BASH SETTINGS: ') + self._dir.join(self.archive).s)
@@ -306,15 +302,15 @@ class RestoreSettings(BaseBackupSettings):
         if Link.Frame: # should always exist
             Link.Frame.Destroy()
 
-    def PromptFile(self):
-        #prompt for backup filename
-        #returns False if user cancels
-        if self.archive is None or not self._dir.join(self.archive).exists():
-            path = askOpen(self.parent,_(u'Restore Bash Settings'),self._dir,u'',u'*.7z')
-            if not path: return False
-            self._dir = path.head
-            self.archive = path.tail
-        return True
+    @staticmethod
+    def _get_backup_filename(parent, path, do_quit):
+        if path is None or path.cext != u'.7z' or not path.isfile():
+            # former may be None
+            base_dir = bass.settings['bash.backupPath'] or bass.dirs[
+                'modsBash']
+            path = askOpen(parent, _(u'Restore Bash Settings'), base_dir, u'',
+                           u'*.7z')
+        return path
 
     def WarnFailed(self):
         showWarning(self.parent,
