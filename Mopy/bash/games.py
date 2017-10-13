@@ -818,23 +818,62 @@ class AsteriskGame(Game):
 # AsteriskGame overrides
 class Fallout4(AsteriskGame):
 
-    must_be_active_if_present = (bolt.GPath(u'DLCRobot.esm'),
-                                 bolt.GPath(u'DLCworkshop01.esm'),
-                                 bolt.GPath(u'DLCCoast.esm'),
-                                 bolt.GPath(u'DLCWorkshop02.esm'),
-                                 bolt.GPath(u'DLCWorkshop03.esm'),
-                                 bolt.GPath(u'DLCNukaWorld.esm'),
-                                 bolt.GPath(u'DLCUltraHighResolution.esm'),)
+    must_be_active_if_present = (
+        bolt.GPath(u'DLCRobot.esm'),
+        bolt.GPath(u'DLCworkshop01.esm'),
+        bolt.GPath(u'DLCCoast.esm'),
+        bolt.GPath(u'DLCWorkshop02.esm'),
+        bolt.GPath(u'DLCWorkshop03.esm'),
+        bolt.GPath(u'DLCNukaWorld.esm'),
+        bolt.GPath(u'DLCUltraHighResolution.esm'),
+        bolt.GPath(u'ccBGSFO4001-PipBoy(Black).esl'),
+        bolt.GPath(u'ccBGSFO4002-PipBoy(Blue).esl'),
+        bolt.GPath(u'ccBGSFO4003-PipBoy(Camo01).esl'),
+        bolt.GPath(u'ccBGSFO4004-PipBoy(Camo02).esl'),
+        bolt.GPath(u'ccBGSFO4006-PipBoy(Chrome).esl'),
+        bolt.GPath(u'ccBGSFO4012-PipBoy(Red).esl'),
+        bolt.GPath(u'ccBGSFO4014-PipBoy(White).esl'),
+        bolt.GPath(u'ccBGSFO4016-Prey.esl'),
+        bolt.GPath(u'ccBGSFO4017-Mauler.esl'),
+        bolt.GPath(u'ccBGSFO4018-GaussRiflePrototype.esl'),
+        bolt.GPath(u'ccBGSFO4019-ChineseStealthArmor.esl'),
+        bolt.GPath(u'ccBGSFO4020-PowerArmorSkin(Black).esl'),
+        bolt.GPath(u'ccBGSFO4022-PowerArmorSkin(Camo01).esl'),
+        bolt.GPath(u'ccBGSFO4023-PowerArmorSkin(Camo02).esl'),
+        bolt.GPath(u'ccBGSFO4025-PowerArmorSkin(Chrome).esl'),
+        bolt.GPath(u'ccBGSFO4038-HorseArmor.esl'),
+        bolt.GPath(u'ccBGSFO4039-TunnelSnakes.esl'),
+        bolt.GPath(u'ccBGSFO4041-DoomMarineArmor.esl'),
+        bolt.GPath(u'ccBGSFO4042-BFG.esl'),
+        bolt.GPath(u'ccBGSFO4043-DoomChainsaw.esl'),
+        bolt.GPath(u'ccBGSFO4044-HellfirePowerArmor.esl'),
+        bolt.GPath(u'ccFSVFO4001-ModularMilitaryBackpack.esl'),
+        bolt.GPath(u'ccFSVFO4002-MidCenturyModern.esl'),
+        bolt.GPath(u'ccFRSFO4001-HandmadeShotgun.esl'),
+        bolt.GPath(u'ccEEJFO4001-DecorationPack.esl'),
+    )
 
     remove_from_plugins_txt = {bolt.GPath(u'Fallout4.esm')} | set(
         must_be_active_if_present)
 
 class SkyrimSE(AsteriskGame):
 
-    must_be_active_if_present = (bolt.GPath(u'Update.esm'),
-                                 bolt.GPath(u'Dawnguard.esm'),
-                                 bolt.GPath(u'Hearthfires.esm'),
-                                 bolt.GPath(u'Dragonborn.esm'),)
+    must_be_active_if_present = (
+        bolt.GPath(u'Update.esm'),
+        bolt.GPath(u'Dawnguard.esm'),
+        bolt.GPath(u'Hearthfires.esm'),
+        bolt.GPath(u'Dragonborn.esm'),
+        bolt.GPath(u'ccBGSSSE002-ExoticArrows.esl'),
+        bolt.GPath(u'ccBGSSSE003-Zombies.esl'),
+        bolt.GPath(u'ccBGSSSE004-RuinsEdge.esl'),
+        bolt.GPath(u'ccBGSSSE006-StendarsHammer.esl'),
+        bolt.GPath(u'ccBGSSSE007-Chrysamere.esl'),
+        bolt.GPath(u'ccBGSSSE010-PetDwarvenArmoredMudcrab.esl'),
+        bolt.GPath(u'ccBGSSSE014-SpellPack01.esl'),
+        bolt.GPath(u'ccBGSSSE019-StaffofSheogorath.esl'),
+        bolt.GPath(u'ccMTYSSE001-KnightsoftheNine.esl'),
+        bolt.GPath(u'ccQDRSSE001-SurvivalMode.esl'),
+    )
     remove_from_plugins_txt = {bolt.GPath(u'Skyrim.esm')} | set(
         must_be_active_if_present)
 
