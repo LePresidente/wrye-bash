@@ -95,8 +95,7 @@ class BaseBackupSettings(object):
 
     def __init__(self, parent=None, path=None, do_quit=False):
         self.quit = do_quit
-        self._dir = path.head
-        self.archive = path.tail
+        self._settings_file = path
         self.parent = parent
         self.files = {}
 
@@ -177,7 +176,7 @@ class BackupSettings(BaseBackupSettings):
 
     def Apply(self):
         deprint(u'')
-        deprint(_(u'BACKUP BASH SETTINGS: ') + self._dir.join(self.archive).s)
+        deprint(_(u'BACKUP BASH SETTINGS: ') + self._settings_file.s)
         temp_settings_backup_dir = bolt.Path.tempDir()
         try:
             self._backup_settings(temp_settings_backup_dir)
@@ -193,21 +192,22 @@ class BackupSettings(BaseBackupSettings):
                 fpath.copyTo(temp_dir.join(tpath))
             # dump the version info and file listing
             with temp_dir.join(u'backup.dat').open('wb') as out:
-                # data version, if this doesn't match the installed data
-                # version, do not allow restore
-                cPickle.dump(bass.settings['bash.version'], out, -1) # Bash version the settings were saved with
-                # app version, if this doesn't match the installer app version,
+                # Bash version the settings were saved with, if this doesn't
+                # match the installed settings version, do not allow restore
+                cPickle.dump(bass.settings['bash.version'], out, -1)
+                # app version, if this doesn't match the installed app version,
                 # warn the user on restore
                 cPickle.dump(bass.AppVersion, out, -1)
             # create the backup archive in 7z format WITH solid compression
             # may raise StateError
-            command = archives.compressCommand(self.archive, self._dir, temp_dir)
-            archives.compress7z(command, self._dir, self.archive, temp_dir)
-            bass.settings['bash.backupPath'] = self._dir
+            backup_dir, dest7z = self._settings_file.head, self._settings_file.tail
+            command = archives.compressCommand(dest7z, backup_dir, temp_dir)
+            archives.compress7z(command, backup_dir, dest7z, temp_dir)
+            bass.settings['bash.backupPath'] = backup_dir
         if self.quit: return
         showInfo(self.parent, u'\n'.join([
             _(u'Your Bash settings have been backed up successfully.'),
-            _(u'Backup Path: ') + self._dir.join(self.archive).s]),
+            _(u'Backup Path: ') + self._settings_file.s]),
             _(u'Backup File Created'))
 
     @staticmethod
@@ -245,8 +245,8 @@ class RestoreSettings(BaseBackupSettings):
                 temp_settings_restore_dir.rmtree(safety=u'WryeBash_')
 
     def _Apply(self, temp_dir):
-        command = archives.extractCommand(self._dir.join(self.archive), temp_dir)
-        archives.extract7z(command, self._dir.join(self.archive))
+        command = archives.extractCommand(self._settings_file, temp_dir)
+        archives.extract7z(command, self._settings_file)
         with temp_dir.join(u'backup.dat').open('rb') as ins:
             saved_settings_version = cPickle.load(ins) # version of Bash that created the backed up settings
             settings_saved_with = cPickle.load(ins) # version of Bash that created the backup
@@ -269,7 +269,7 @@ class RestoreSettings(BaseBackupSettings):
             return
 
         deprint(u'')
-        deprint(_(u'RESTORE BASH SETTINGS: ') + self._dir.join(self.archive).s)
+        deprint(_(u'RESTORE BASH SETTINGS: ') + self._settings_file.s)
 
         # reinitialize bass.dirs using the backup copy of bash.ini if it exists
         game, dirs = bush.game.fsName, bass.dirs
@@ -332,7 +332,7 @@ class RestoreSettings(BaseBackupSettings):
         if self.quit: return
         showWarning(self.parent,
             _(u'Your Bash settings have been successfully restored.')+u'\n' +
-            _(u'Backup Path: ')+self._dir.join(self.archive).s+u'\n' +
+            _(u'Backup Path: ')+self._settings_file.s+u'\n' +
             u'\n' +
             _(u'Before the settings can take effect, Wrye Bash must restart.')+u'\n' +
             _(u'Click OK to restart now.'),
