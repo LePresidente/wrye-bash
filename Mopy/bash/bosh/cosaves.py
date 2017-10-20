@@ -29,7 +29,8 @@ renaming of the masters of the xSE plugin chunk itself and of the Pluggy chunk.
 import struct
 
 from ..bolt import sio, GPath, decode, encode, unpack_string, unpack_int, \
-    unpack_short, unpack_4s, unpack_byte, unpack_str16
+    unpack_short, unpack_4s, unpack_byte, unpack_str16, struct_pack, \
+    struct_unpack
 from ..exception import FileError
 
 class CoSaveHeader(object):
@@ -77,7 +78,7 @@ class _SEChunk(_Chunk):
     def log_chunk(self, log, ins, save_masters, espmMap):
         chunkType = self.chunkType
         def _unpack(fmt, fmt_siz):
-            return struct.unpack(fmt, ins.read(fmt_siz))
+            return struct_unpack(fmt, ins.read(fmt_siz))
         if chunkType == 'RVTS':
             #--OBSE String
             modIndex, stringID, stringLength, = _unpack('=BIH', 7)
@@ -151,7 +152,7 @@ class _SEChunk(_Chunk):
         with sio(self.chunkData) as ins:
             num_of_masters = unpack_byte(ins) # this won't change
             with sio() as out:
-                def _pack(fmt, *args): out.write(struct.pack(fmt, *args))
+                def _pack(fmt, *args): out.write(struct_pack(fmt, *args))
                 _pack('B', num_of_masters)
                 while ins.tell() < len(self.chunkData):
                     modName = GPath(unpack_str16(ins))
@@ -170,9 +171,9 @@ class _PluggyChunk(_Chunk):
     def log_chunk(self, log, ins, save_masters, espMap):
         chunkVersion = self.chunkVersion
         chunkBuff = self.chunkData
-        chunkTypeNum, = struct.unpack('=I', self.chunkType)
+        chunkTypeNum, = struct_unpack('=I', self.chunkType)
         def _unpack(fmt, fmt_siz):
-            return struct.unpack(fmt, ins.read(fmt_siz))
+            return struct_unpack(fmt, ins.read(fmt_siz))
         if chunkTypeNum == 1:
             #--Pluggy TypeESP
             log(_(u'    Pluggy ESPs'))
@@ -210,13 +211,13 @@ class _PluggyChunk(_Chunk):
                 elemIdx, elemType, = _unpack('=IB', 5)
                 elemStr = ins.read(4)
                 if elemType == 0:  #--Integer
-                    elem, = struct.unpack('=i', elemStr)
+                    elem, = struct_unpack('=i', elemStr)
                     log(u'        [%u]  INT  %d' % (elemIdx, elem,))
                 elif elemType == 1:  #--Ref
-                    elem, = struct.unpack('=I', elemStr)
+                    elem, = struct_unpack('=I', elemStr)
                     log(u'        [%u]  REF  %08X' % (elemIdx, elem,))
                 elif elemType == 2:  #--Float
-                    elem, = struct.unpack('=f', elemStr)
+                    elem, = struct_unpack('=f', elemStr)
                     log(u'        [%u]  FLT  %08X' % (elemIdx, elem,))
         elif chunkTypeNum == 4:
             #--Pluggy TypeName
@@ -299,15 +300,15 @@ class _PluggyChunk(_Chunk):
             log(u'      ' + _(u'FText  :') + u' %s' % hudText)
 
     def chunk_map_master(self, master_renames_dict, plugin_chunk):
-        chunkTypeNum, = struct.unpack('=I', self.chunkType)
+        chunkTypeNum, = struct_unpack('=I', self.chunkType)
         if chunkTypeNum != 1:
             return # TODO confirm this is the espm chunk for Pluggy
         with sio(self.chunkData) as ins:
             with sio() as out:
                 def _unpack(fmt, fmt_siz):
-                    return struct.unpack(fmt, ins.read(fmt_siz))
+                    return struct_unpack(fmt, ins.read(fmt_siz))
                 def _pack(fmt, *args):
-                    out.write(struct.pack(fmt, *args))
+                    out.write(struct_pack(fmt, *args))
                 while ins.tell() < len(self.chunkData):
                     espId, modId, modNameLen, = _unpack('=BBI', 6)
                     modName = GPath(ins.read(modNameLen))
@@ -379,7 +380,7 @@ class ACoSaveFile(object):
             log(u'-' * 80)
             espMap = {}
             for ch in plugin_ch.plugin_chunks: # type: _Chunk
-                chunkTypeNum, = struct.unpack('=I',ch.chunkType)
+                chunkTypeNum, = struct_unpack('=I',ch.chunkType)
                 if ch.chunkType[0] >= ' ' and ch.chunkType[3] >= ' ': # HUH ?
                     log(u'  %4s  %-4u  %08X' % (
                         ch.chunkType, ch.chunkVersion, ch.chunkLength))
@@ -392,7 +393,7 @@ class ACoSaveFile(object):
     def write_cosave(self, out_path):
         mtime = self.cosave_path.mtime # must exist !
         with sio() as buff:
-            def _pack(fmt, *args): buff.write(struct.pack(fmt, *args))
+            def _pack(fmt, *args): buff.write(struct_pack(fmt, *args))
             buff.write(self.__class__.signature)
             _pack('=I', self.cosave_header.formatVersion)
             _pack('=H', self.cosave_header.obseVersion)

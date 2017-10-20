@@ -38,7 +38,8 @@ import pkgutil
 import re
 import shutil
 import stat
-import struct
+from struct import pack as struct_pack
+from struct import unpack as struct_unpack
 import subprocess
 import sys
 import tempfile
@@ -1624,33 +1625,33 @@ class Settings(DataDict):
         return self.data.pop(key,default)
 
 # Structure wrappers ----------------------------------------------------------
-def unpack_str8(ins): return ins.read(struct.unpack('B', ins.read(1))[0])
-def unpack_str16(ins): return ins.read(struct.unpack('H', ins.read(2))[0])
-def unpack_str32(ins): return ins.read(struct.unpack('I', ins.read(4))[0])
-def unpack_int(ins): return struct.unpack('I', ins.read(4))[0]
-def unpack_short(ins): return struct.unpack('H', ins.read(2))[0]
-def unpack_float(ins): return struct.unpack('f', ins.read(4))[0]
-def unpack_byte(ins): return struct.unpack('B', ins.read(1))[0]
-def unpack_int_signed(ins): return struct.unpack('i', ins.read(4))[0]
-def unpack_int64_signed(ins): return struct.unpack('q', ins.read(8))[0]
-def unpack_4s(ins): return struct.unpack('4s', ins.read(4))[0]
+def unpack_str8(ins): return ins.read(struct_unpack('B', ins.read(1))[0])
+def unpack_str16(ins): return ins.read(struct_unpack('H', ins.read(2))[0])
+def unpack_str32(ins): return ins.read(struct_unpack('I', ins.read(4))[0])
+def unpack_int(ins): return struct_unpack('I', ins.read(4))[0]
+def unpack_short(ins): return struct_unpack('H', ins.read(2))[0]
+def unpack_float(ins): return struct_unpack('f', ins.read(4))[0]
+def unpack_byte(ins): return struct_unpack('B', ins.read(1))[0]
+def unpack_int_signed(ins): return struct_unpack('i', ins.read(4))[0]
+def unpack_int64_signed(ins): return struct_unpack('q', ins.read(8))[0]
+def unpack_4s(ins): return struct_unpack('4s', ins.read(4))[0]
 
 def unpack_string(ins, string_len):
-    return struct.unpack('%ds' % string_len, ins.read(string_len))[0]
+    return struct_unpack('%ds' % string_len, ins.read(string_len))[0]
 
 def unpack_many(ins, fmt):
-    return struct.unpack(fmt, ins.read(struct.calcsize(fmt)))
+    return struct_unpack(fmt, ins.read(struct.calcsize(fmt)))
 
 #------------------------------------------------------------------------------
 class StructFile(file):
     """File reader/writer with extra functions for handling structured data."""
     def unpack(self,format,size):
         """Reads and unpacks according to format."""
-        return struct.unpack(format,self.read(size))
+        return struct_unpack(format,self.read(size))
 
     def pack(self,format,*data):
         """Packs data according to format."""
-        self.write(struct.pack(format,*data))
+        self.write(struct_pack(format,*data))
 
 #------------------------------------------------------------------------------
 class TableColumn:

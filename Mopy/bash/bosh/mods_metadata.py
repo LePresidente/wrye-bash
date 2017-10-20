@@ -24,10 +24,9 @@
 import errno
 import os
 import re
-import struct
 
 from .. import balt, bolt, bush, bass, load_order
-from ..bolt import GPath, deprint, sio
+from ..bolt import GPath, deprint, sio, struct_pack, struct_unpack
 from ..brec import ModReader, MreRecord
 from ..cint import ObBaseRecord, ObCollection
 from ..exception import BoltError, CancelError, ModError
@@ -769,7 +768,7 @@ class ModCleaner:
                         insRead = ins.read
                         insUnpack = ins.unpack
                         headerSize = ins.recHeader.size
-                        structUnpack = struct.unpack
+                        structUnpack = struct_unpack
                         while not insAtEnd():
                             subprogress(insTell())
                             header = insUnpackRecHeader()
@@ -990,7 +989,7 @@ class ModCleaner:
                                         if not (near or far or clip):
                                             near = 0.0001
                                             changed = True
-                                        out.write(struct.pack('=12s2f2l2f',color,near,far,rotXY,rotZ,fade,clip))
+                                        out.write(struct_pack('=12s2f2l2f', color, near, far, rotXY, rotZ, fade, clip))
                             else:
                                 copy(size)
             #--Save
@@ -1065,7 +1064,7 @@ class NvidiaFogFixer:
                                 if not (near or far or clip):
                                     near = 0.0001
                                     fixedCells.add(header.fid)
-                                out.write(struct.pack('=12s2f2l2f',color,near,far,rotXY,rotZ,fade,clip))
+                                out.write(struct_pack('=12s2f2l2f', color, near, far, rotXY, rotZ, fade,clip))
                     #--Non-Cells
                     else:
                         copy(size)
@@ -1091,7 +1090,7 @@ class ModDetails:
                 return ins,ins.tell()+size
             else:
                 import zlib
-                sizeCheck, = struct.unpack('I',ins.read(4))
+                sizeCheck, = struct_unpack('I', ins.read(4))
                 decomp = zlib.decompress(ins.read(size-4))
                 if len(decomp) != sizeCheck:
                     raise ModError(ins.inName,

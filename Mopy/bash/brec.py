@@ -26,16 +26,14 @@
 import zlib
 import StringIO
 import os
-import struct
 import copy
 import cPickle
-from operator import attrgetter
-from struct import pack as struct_pack
+from ..bolt import struct_pack, struct_unpack
 from struct import unpack as struct_unpack
 import bass
 import bolt
 import exception
-from bolt import decode, encode, sio, GPath
+from bolt import decode, encode, sio, GPath, struct_pack, struct_unpack
 from bass import null1
 
 # Util Functions --------------------------------------------------------------

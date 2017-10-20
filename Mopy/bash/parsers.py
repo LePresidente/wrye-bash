@@ -30,7 +30,6 @@ from _ctypes import POINTER
 from ctypes import cast, c_ulong
 from operator import attrgetter, itemgetter
 import re
-import struct
 # Internal
 import bolt
 import bush # for game and actorValues
@@ -38,7 +37,8 @@ import bosh # for modInfos
 import env
 import load_order
 from balt import Progress
-from bolt import GPath, decode, deprint, CsvReader, csvFormat, SubProgress
+from bolt import GPath, decode, deprint, CsvReader, csvFormat, SubProgress, \
+    struct_pack, struct_unpack
 from bass import dirs, inisettings
 from brec import MreRecord, MelObject, _coerce, genFid, ModReader, ModWriter
 from cint import ObCollection, FormID, aggregateTypes, validTypes, \
@@ -2570,7 +2570,7 @@ class CompleteItemData(_UsesEffectsMixin): #Needs work
                 'MISC','SGST','SLGM','WEAP')]
         aliases = self.aliases
         with CsvReader(textPath) as ins:
-            pack,unpack = struct.pack,struct.unpack
+            pack,unpack = struct_pack, struct_unpack
             sfloat = lambda a:unpack('f',pack('f',float(a)))[
                 0] #--Force standard precision
             for fields in ins:
